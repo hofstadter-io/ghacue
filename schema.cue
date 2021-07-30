@@ -4,17 +4,23 @@ package ghacue
 // based on https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 #Workflow: {
 	// The name of your workflow
-	name: string
+	name?: string
 	// Events which trigger the workflow
 	on: #On
-
-	defaults: {...}
 
 	// Permissions granted to the GITHUB_TOKEN
 	permissions?: #Permissions
 
 	// Env Vars available to the steps of all jobs
-	env: [string]: string
+	env?: [string]: string
+
+	// A map of default settings that will apply to all jobs in the workflow.
+	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#defaults
+	defaults?: #Defaults
+
+	// [beta] ensures that only a single job or workflow using the same concurrency group will run at a time
+	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
+	concurrency?: string | { group: string, "cancel-in-progress": bool }
 
 	jobs: [Name=string]: #Job
 
@@ -26,12 +32,14 @@ package ghacue
 #OnEvent: or(#OnEventTypes)
 #OnEventList: [...#OnEvent]
 #OnEventMap: [Event=string]: #OnEventObject & { #event: Event }
+// TODO, parse and validate cron syntax
+#OnEventSchedule: schedule: string
+// TODO implement more ON schema
+// https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 #OnEventObject: {
 	// ensure the map key is a known type
 	#event: #OnEvent
 }
-// TODO, parse and validate cron syntax
-#OnEventSchedule: schedule: string
 
 #Job: {
 	// display name
@@ -50,24 +58,36 @@ package ghacue
 	// See: https://docs.github.com/en/actions/reference/environments
 	environment?: string | { name: string, url: string }
 
-	// [beta] https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#env
+	// [beta] ensures that only a single job or workflow using the same concurrency group will run at a time
+	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency
 	concurrency?: string | { group: string, "cancel-in-progress": bool }
 
 	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
-	outputs: [string]: string
+	outputs?: [string]: string
 
 	// A map of environment variables that are available to all steps in the job
-	env: [string]: string
+	env?: [string]: string
 	
+	// A map of default settings that will apply to all steps in the job.
+	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_iddefaults
+	defaults?: #Defaults
+
 	// You can use the if conditional to prevent a job from running unless a condition is met.
 	// https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions
 	"if"?: string
 
-
+	// Steps can run commands, run setup tasks, or run an action in your repository, a public repository, or an action published in a Docker registry.
+	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idsteps
 	steps: [...#Step]
 
-	"continue-on-error"?: bool
 	"timeout-minutes"?: uint
+
+	// A strategy creates a build matrix for your jobs. You can define different variations to run each job in.
+	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstrategy
+	strategy: #Strategy
+
+	"continue-on-error"?: bool
+
 
 	// A container to run any steps in a job that don't already specify a container.
 	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idcontainer
@@ -91,7 +111,7 @@ package ghacue
 	"if"?: string
 
 	// A map of environment variables that are available to all steps in the job
-	env: [string]: string
+	env?: [string]: string
 
 	// Selects an action to run as part of a step in your job.
 	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstepsuses
@@ -106,7 +126,7 @@ package ghacue
 	// override the default shell settings in the runner's operating system
 	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#using-a-specific-shell
 	// TODO validation based on "runs-on"
-	shell?: "bash" | "pwsh" | "python" | "sh" | "cmd" | "powershell"
+	shell?: #Shell
 
 	// A map of the input parameters defined by the action
 	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstepswith
@@ -116,6 +136,8 @@ package ghacue
 	"timeout-minutes"?: uint
 
 }
+
+#Shell: "bash" | "pwsh" | "python" | "sh" | "cmd" | "powershell"
 
 #RunsOn: or(#RunsOnList)
 #RunsOnList: [
@@ -144,6 +166,18 @@ package ghacue
 	statuses?: "read" | "write" | "none"
 }
 
+#Defaults: {
+	run?: {
+		shell?: #Shell
+		"working-directory"?: string
+	}
+	// other defaults
+	[string]: string
+}
+
+// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstrategy
+#Strategy: [string]: _
+
 #Container: string | {
 	image: string
 	credentials?: {
@@ -159,3 +193,4 @@ package ghacue
 	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idcontaineroptions
 	options: {...}
 }
+
