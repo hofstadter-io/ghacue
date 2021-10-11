@@ -39,6 +39,7 @@ package ghacue
 #OnEventObject: {
 	// ensure the map key is a known type
 	#event: #OnEvent
+	...
 }
 
 #Job: {
@@ -119,7 +120,7 @@ package ghacue
 
 	// Runs command-line programs using the operating system's shell.
 	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-	run: string
+	run?: string
 
 	"working-directory"?: string
 
@@ -139,7 +140,7 @@ package ghacue
 
 #Shell: "bash" | "pwsh" | "python" | "sh" | "cmd" | "powershell"
 
-#RunsOn: or(#RunsOnList)
+#RunsOn: string | or(#RunsOnList)
 #RunsOnList: [
 	"windows-latest",
 	"windows-2019",
