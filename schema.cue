@@ -26,7 +26,7 @@ package ghacue
 
 }
 
-#OnEventTypes: ["push", "pull_request"]
+#OnEventTypes: ["push", "pull_request", "workflow_dispatch", "workflow_call"]
 
 #On: #OnEvent | #OnEventList | #OnEventMap | #OnEventSchedule
 #OnEvent: or(#OnEventTypes)
