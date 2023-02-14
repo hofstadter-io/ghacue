@@ -131,7 +131,7 @@ package ghacue
 
 	// A map of the input parameters defined by the action
 	// https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstepswith
-	with?: [string]: string
+	with?: [string]: _
 	
 	"continue-on-error"?: bool
 	"timeout-minutes"?: uint
